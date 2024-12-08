@@ -1,0 +1,65 @@
+// Datasource configuration for PostgreSQL
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")  // Database URL from environment variable
+}
+
+// Prisma client generator configuration
+generator client {
+  provider = "prisma-client-js"  // Generate Prisma client
+}
+
+// Model to represent RSS feeds in the database (Article)
+model RssFeed {
+  id          Int      @id @default(autoincrement()) // Unique ID for the RSS feed
+  link        String   @unique  // Unique link to identify the article
+  author      String?  // Optional author of the article
+  title       String   // Title of the article
+  content     String?  // Content of the article, optional field
+  language    String   // Language of the publisher's articles (e.g., 'EN', 'BM')
+  images      Image[]   // Link to an image associated with the article (e.g., default image URL)
+  publishedAt DateTime @map("published_at")  // Published date of the article, maps to "published_at" in DB
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")  // Updated date, maps to "updated_at"
+
+  // Foreign key to Publisher
+  publisherId Int?    // Foreign key to the Publisher model
+  publisher   Publisher? @relation("PublisherArticles", fields: [publisherId], references: [id])  // Relation to the Publisher
+
+  categories  Category[] @relation("CategoryArticles")  // Many-to-many relation to Category model
+}
+
+// Model to represent a publisher that creates RSS feeds
+model Publisher {
+  id        Int      @id @default(autoincrement()) // Unique ID for the publisher
+  name      String   @unique  // Unique name for the publisher
+  rssLinks  RssLink[]   // Relational field to a separate table
+  createdAt DateTime @default(now())  // Timestamp for when the publisher was created
+  updatedAt DateTime @default(now()) @updatedAt  // Timestamp for when the publisher was last updated
+
+  // Relation to the RSS feeds published by this Publisher
+  articles  RssFeed[] @relation("PublisherArticles")  // One-to-many relation from Publisher to RssFeed
+}
+
+model RssLink {
+  id        Int      @id @default(autoincrement())
+  url       String   @unique
+  publisher Publisher @relation(fields: [publisherId], references: [id])
+  publisherId Int
+}
+
+// Model to represent categories for articles
+model Category {
+  id        Int      @id @default(autoincrement()) // Unique ID for the category
+  name      String   @unique  // Name of the category (e.g., 'Food', 'News', 'World')
+  articles  RssFeed[] @relation("CategoryArticles") // Relationship to the RSS feeds/articles in this category
+  createdAt DateTime @default(now())  // Timestamp for when the category was created
+  updatedAt DateTime @default(now()) @updatedAt  // Timestamp for when the category was last updated
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String   @unique
+  type      String   // Optional: You can add the type of image (e.g., "featured", "thumbnail")
+  rssFeedId Int
+  rssFeed   RssFeed  @relation(fields: [rssFeedId], references: [id])
+}
