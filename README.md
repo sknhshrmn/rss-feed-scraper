@@ -37,11 +37,15 @@ Ensure you have the following installed:
    PORT=3000
    HOST=http://localhost
 
-  Replace {username}, {password}, {host}, {port}, and {database} with your database details.
+Replace {username}, {password}, {host}, {port}, and {database} with your database details.
 
 2. **Apply Database Migrations**  
    ```bash
    npx prisma migrate dev
+
+3. **Data Seeding**  
+   ```bash
+   yarn seed
 
 ### Running the Application
 
